@@ -81,7 +81,7 @@
 -export([behaviour_info/1]).
 %% API
 -export([start/3, start/4, start_link/3, start_link/4, call/2, call/3]).
--export([filter/2, firehose/2, retweet/2, links/2, sample/2, rest/1]).
+-export([filter/2, firehose/2, retweet/2, links/2, sample/2, rest/1, user/2]).
 -export([current_method/1]).
 %% GEN SERVER
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -150,6 +150,9 @@ start_link(Name, Mod, Args, Options) ->
 -spec filter(server(), [filter_option() | ibrowse:option()]) -> ok.
 filter(Server, Options) ->
   gen_server:cast(Server, {"filter", Options}).
+
+user(Server, Options) ->
+  gen_server:cast(Server, {"user", Options}).
 
 %%% @doc  Starts using the <a href="http://dev.twitter.com/pages/streaming_api_methods#statuses-firehose">statuses/firehose</a> method to get results
 -spec firehose(server(), [gen_option() | ibrowse:option()]) -> ok.
@@ -248,7 +251,12 @@ handle_call({call, Request}, From, State = #state{module = Mod, mod_state = ModS
 %% @hidden
 -spec handle_cast(rest | wait | {string(), [filter_option() | gen_option() | ibrowse:option()]}, state()) -> {noreply, state(), pos_integer() | infinity} | {stop, term(), state()}.
 handle_cast(M = {Method, Options}, State = #state{token = Token, secret = Secret, req_id = OldReqId, reconnect_timer = Timer}) ->
-  Url = "https://stream.twitter.com/1.1/statuses/" ++ Method ++ ".json",
+  Url = case Method of
+    "user" ->
+        "https://userstream.twitter.com/1.1/user.json";
+    _ -> 
+        "https://stream.twitter.com/1.1/statuses/" ++ Method ++ ".json"
+  end,
   {QueryString, IOptions} = extract_query_string(Options),
   case Timer of
     undefined -> ok;
