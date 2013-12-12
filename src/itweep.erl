@@ -481,6 +481,8 @@ extract_query_string([{locations, V} | Rest], Qs, Ops) ->
                         io_lib:format("~s,~.5g,~.5g,~.5g,~.5g", [Acc,L1,L2,L3,L4])
                 end, [], V),
   extract_query_string(Rest, [{"locations", lists:flatten(Locations)} | Qs], Ops);
+extract_query_string([{with, V} | Rest], Qs, Ops) ->
+  extract_query_string(Rest, [{"with", V} | Qs], Ops);
 extract_query_string([O|Rest], Qs, Ops) ->
   extract_query_string(Rest, Qs, [O|Ops]).
 
